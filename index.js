@@ -3,28 +3,63 @@ const { MongoClient } = require("mongodb");
 const axios = require("axios");
 const Realm = require("realm-web");
 const auth = new Realm.App({ id: "data-eaisp" });
+const cors = require("cors");
 
-const app = express();
-app.use(express.json());
-const port = 5000;
-
-async function loginEmailPassword(email, password) {
-  // Create an email/password credential
-  const credentials = Realm.Credentials.emailPassword(email, password);
-  // Authenticate the user
-  const user = await auth.logIn(credentials);
-  // 'App.currentUser' updates to match the logged in user
-  console.assert(user.id === auth.currentUser.id);
-  return user;
-}
-
-// Connection URI
 const uri =
   "mongodb+srv://hai28022002:matkhaulaloz02@mongodb.caqg1s8.mongodb.net/?retryWrites=true&w=majority&appName=mongoDB";
 
-// Create a new MongoClient
 const client = new MongoClient(uri);
+const { createServer } = require("http");
+const httpServer = createServer();
+const { Server } = require("socket.io");
+const io = new Server(httpServer, { cors: { origin: "*" } });
+io.on("connect", async (socket) => {
+  console.log("A user connected");
 
+  await connectMongoDB();
+  getDataByTimestamp()
+    .then((data) => {
+      console.log(typeof data);
+      socket.emit("initData", data);
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+
+  const changeStream = client.db("IOT").collection("data2").watch();
+  changeStream.on("change", (change) => {
+    getDataByTimestamp()
+      .then((data) => {
+        console.log(typeof data);
+        socket.emit("updateData", data);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+    changeStream.close();
+  });
+});
+
+httpServer.listen(3000);
+async function getDataByTimestamp() {
+  try {
+    const result = await client
+      .db("IOT")
+      .collection("data2")
+      .find({})
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .toArray();
+    return result.reverse();
+  } catch (error) {
+    console.error("Error fetching data by timestamp:", error);
+    throw error; // Re-throw the error to handle it outside
+  }
+}
 async function connectMongoDB() {
   try {
     await client.connect();
@@ -33,6 +68,19 @@ async function connectMongoDB() {
     console.error("Error connecting to MongoDB:", error);
     throw error; // Re-throw the error to handle it outside
   }
+}
+
+const app = express();
+app.use(express.json());
+const port = 5000;
+async function loginEmailPassword(email, password) {
+  // Create an email/password credential
+  const credentials = Realm.Credentials.emailPassword(email, password);
+  // Authenticate the user
+  const user = await auth.logIn(credentials);
+  // 'App.currentUser' updates to match the logged in user
+  console.assert(user.id === auth.currentUser.id);
+  return user;
 }
 
 async function getIotData() {
@@ -62,6 +110,7 @@ async function addIotData(temp, humid) {
   }
 }
 
+//call API
 async function fetchData() {
   try {
     const data = JSON.stringify({
@@ -125,15 +174,15 @@ async function fetchDataBearer(token) {
 async function start() {
   try {
     await connectMongoDB();
-    await getIotData();
-    const randomTemp = parseInt(Math.floor(Math.random() * 50));
-    const randomHumid = parseInt(Math.floor(Math.random() * 50));
-    await addIotData(randomTemp, randomHumid);
-    const count = await fetchData();
-    console.log("Total documents:", count);
+    // await getIotData();
+    // const randomTemp = parseInt(Math.floor(Math.random() * 50));
+    // const randomHumid = parseInt(Math.floor(Math.random() * 50));
+    // await addIotData(randomTemp, randomHumid);
+    // const count = await fetchData();
+    // console.log("Total documents:", count);
 
     // Set up change stream
-    const changeStream = client.db("IOT").collection("data").watch();
+    const changeStream = client.db("IOT").collection("data2").watch();
     changeStream.on("change", async (change) => {
       console.log(change.fullDocument);
     });
@@ -150,6 +199,6 @@ app.listen(port, async () => {
     "hai28022002@gmail.com",
     "hoanghai2002"
   );
-  console.log(user.accessToken);
-  fetchDataBearer(user.accessToken);
+  // console.log(user.accessToken);
+  // fetchDataBearer(user.accessToken);
 });

@@ -46,7 +46,11 @@ io.on("connect", async (socket) => {
     changeStream.close();
   });
 });
-httpServer.listen(3001);
+httpServer.listen(process.env.PORT || 3000, function() {
+  var host = httpServer.address().address
+  var port = httpServer.address().port
+  console.log('App listening at https://%s:%s', host, port)
+});
 async function getDataByTimestamp() {
   try {
     const result = await client

@@ -7,6 +7,7 @@ const cors = require("cors");
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 const port = 5000;
 
 const uri =
@@ -16,14 +17,11 @@ const client = new MongoClient(uri);
 const { createServer } = require("http");
 const httpServer = createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(httpServer, { cors:  {origin: "*",
-preflightContinue: false,
-optionsSuccessStatus: 204 }});
+const io = new Server(httpServer, {
+  cors: { origin: "*", preflightContinue: false, optionsSuccessStatus: 204 },
+});
 io.on("connect", async (socket) => {
   console.log("A user connected");
- 
-  
-
   await connectMongoDB();
   getDataByTimestamp()
     .then((data) => {
@@ -74,7 +72,6 @@ async function connectMongoDB() {
     throw error; // Re-throw the error to handle it outside
   }
 }
-
 
 async function loginEmailPassword(email, password) {
   // Create an email/password credential

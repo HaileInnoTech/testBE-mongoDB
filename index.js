@@ -49,7 +49,7 @@ io.on("connect", async (socket) => {
 httpServer.listen(process.env.PORT || 3000, function() {
   var host = httpServer.address().address
   var port = httpServer.address().port
-  console.log('App listening at https://%s:%s', host, port)
+  console.log(`Example app listening at http://${host}:${port}`)
 });
 async function getDataByTimestamp() {
   try {

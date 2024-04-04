@@ -12,11 +12,13 @@ const client = new MongoClient(uri);
 const { createServer } = require("http");
 const httpServer = createServer();
 const { Server } = require("socket.io");
-const io = new Server(httpServer, {
-  cors: { origin: "*", preflightContinue: false, optionsSuccessStatus: 204 },
-});
+const io = new Server(httpServer, { cors:  {origin: "*",
+preflightContinue: false,
+optionsSuccessStatus: 204 }});
 io.on("connect", async (socket) => {
   console.log("A user connected");
+ 
+  
 
   await connectMongoDB();
   getDataByTimestamp()
@@ -39,14 +41,12 @@ io.on("connect", async (socket) => {
         console.error("Error:", error);
       });
   });
-
   socket.on("disconnect", () => {
     console.log("A user disconnected");
     changeStream.close();
   });
 });
-
-httpServer.listen(3000);
+httpServer.listen(3001);
 async function getDataByTimestamp() {
   try {
     const result = await client

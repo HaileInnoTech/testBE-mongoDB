@@ -12,12 +12,9 @@ const client = new MongoClient(uri);
 const { createServer } = require("http");
 const httpServer = createServer();
 const { Server } = require("socket.io");
-const io = new Server(httpServer, { cors:   {
-  "origin": "*",
-  "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-  "preflightContinue": false,
-  "optionsSuccessStatus": 204
-} });
+const io = new Server(httpServer, {
+  cors: { origin: "*", preflightContinue: false, optionsSuccessStatus: 204 },
+});
 io.on("connect", async (socket) => {
   console.log("A user connected");
 

@@ -5,12 +5,16 @@ const Realm = require("realm-web");
 const auth = new Realm.App({ id: "data-eaisp" });
 const cors = require("cors");
 
+const app = express();
+app.use(express.json());
+const port = 5000;
+
 const uri =
   "mongodb+srv://hai28022002:matkhaulaloz02@mongodb.caqg1s8.mongodb.net/?retryWrites=true&w=majority&appName=mongoDB";
 
 const client = new MongoClient(uri);
 const { createServer } = require("http");
-const httpServer = createServer();
+const httpServer = createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(httpServer, { cors:  {origin: "*",
 preflightContinue: false,
@@ -46,11 +50,7 @@ io.on("connect", async (socket) => {
     changeStream.close();
   });
 });
-httpServer.listen(process.env.PORT || 3000, function() {
-  var host = httpServer.address().address
-  var port = httpServer.address().port
-  console.log(`Example app listening at http://${host}:${port}`)
-});
+httpServer.listen(5001);
 async function getDataByTimestamp() {
   try {
     const result = await client
@@ -76,9 +76,7 @@ async function connectMongoDB() {
   }
 }
 
-const app = express();
-app.use(express.json());
-const port = 5000;
+
 async function loginEmailPassword(email, password) {
   // Create an email/password credential
   const credentials = Realm.Credentials.emailPassword(email, password);

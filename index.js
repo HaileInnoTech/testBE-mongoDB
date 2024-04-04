@@ -50,7 +50,6 @@ io.on("connect", async (socket) => {
     changeStream.close();
   });
 });
-httpServer.listen(5001);
 async function getDataByTimestamp() {
   try {
     const result = await client
@@ -196,7 +195,7 @@ async function start() {
 }
 
 // Start the server
-app.listen(port, async () => {
+httpServer.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
   start();
   const user = await loginEmailPassword(
